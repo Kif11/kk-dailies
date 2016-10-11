@@ -1,0 +1,7 @@
+# Configuratin for the slate
+
+company_logo: logo.png
+company_font: lunatix.otf
+body_font: liberationsans_regular.ttf
+bars: bars.png
+color_bar: cbar.png

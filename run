@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Get this scrip directory
+CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Set basic environmental variables
+export PYTHONPATH="$PYTHONPATH:$CURDIR:$CURDIR/modules"
+
+COMMAND="$1"
+
+if [ "$COMMAND" = "" ]
+then
+    python ./slate.py
+
+elif [ "$COMMAND" = "test" ]
+then
+    python ./tests/simple_test.py
+
+elif [ "$COMMAND" = "setup" ]
+  then
+
+    # Mac installation only!
+
+    # static FFmpeg binaries for Mac OS X Intel 64bit
+    FFMPEG_LINK="http://evermeet.cx/ffmpeg/ffmpeg-81960-g1bda0ee.dmg"
+
+    if [ ! -f bin/ffmpeg ]; then
+
+      mkdir bin
+      curl -sS $FFMPEG_LINK > bin/ffmpeg.dmg
+      hdiutil attach bin/ffmpeg.dmg
+      cp "/Volumes/FFmpeg 81960-g1bda0ee/ffmpeg" bin/ffmpeg
+      hdiutil detach /dev/disk2
+      rm bin/ffmpeg.dmg
+
+      else
+        echo 'FFMPEG alredy installed!'
+    fi
+
+    mkdir modules
+    git clone https://github.com/Kif11/kk-yaml modules/yaml
+
+else
+    echo "run script does not know this command"
+fi
