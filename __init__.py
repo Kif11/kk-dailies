@@ -1,0 +1,1 @@
+from slate import Slate

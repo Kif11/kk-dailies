@@ -14,6 +14,8 @@ class Slate(object):
         with open(config_file, 'r') as f:
             self.config = yaml.load(f)
         self.ffmpeg = os.path.join(script_dir, 'bin', 'ffmpeg')
+        if not os.path.exists(self.ffmpeg):
+            self.ffmpeg = 'ffmpeg'
 
         # Resource files
         self.res = os.path.join(script_dir, 'resources')
@@ -143,9 +145,15 @@ class Slate(object):
             description=self.fields_data['description']
         )
         cmd = [
-            self.ffmpeg, '-y', '-start_number', self.start_frame, '-i', self.source,
+            self.ffmpeg, '-y', '-start_number', self.start_frame, '-i', str(self.source),
             '-f', 'lavfi', '-i', 'color=c=black', '-i', self.bars, '-i', self.color_bars,
-            '-i', self.logo, '-vframes', '1', '-filter_complex', filters, self.output
+            '-i', self.logo, '-vframes', '1', '-filter_complex', filters, str(self.output)
         ]
 
+        print cmd
+
         sp.call(cmd)
+
+        #TODO)Kirill) Check for errors and clean exit
+
+        return self.output
