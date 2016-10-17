@@ -1,1 +1,1 @@
-from slate import Slate
+from dailies import Dailies

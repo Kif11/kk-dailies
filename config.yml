@@ -5,3 +5,7 @@ company_font: lunatix.otf
 body_font: liberationsans_regular.ttf
 bars: bars.png
 color_bar: cbar.png
+
+video_pressets:
+  pjpeg: -r 24 -crf 18 -vcodec mjpeg -s 1920x1080 -pix_fmt yuvj444p -qmin 1 -qmax 1
+  dnxhd: -r 24 -vcodec dnxhd -s 1920x1080 -b:v 36M -minrate 36M -maxrate 36M

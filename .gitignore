@@ -95,4 +95,4 @@ bin/
 modules/
 
 # Test output
-tests/out_slate.png
+tests/tmp
