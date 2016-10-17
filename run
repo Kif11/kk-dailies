@@ -39,6 +39,7 @@ elif [ "$COMMAND" = "setup" ]
 
     mkdir modules
     git clone https://github.com/Kif11/kk-yaml modules/yaml
+    git clone https://github.com/evileyepictures/eep-fileseq modules/fileseq
 
 else
     echo "run script does not know this command"
