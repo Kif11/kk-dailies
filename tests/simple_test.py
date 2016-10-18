@@ -11,8 +11,8 @@ out_mov_dnxhd = os.path.join(tmp_dir, 'out_video_dnxhd.mov')
 
 
 values = {
-    'company_name': 'Company Name',
-    'project_name': 'Zero Day Project',
+    'company_name': 'CompanyName',
+    'project_name': 'ZeroDayProject',
     'lut': 'someLutHere',
     'shot_name': 'sh0000',
     'file_name': 'blaFileName.png',
