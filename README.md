@@ -3,7 +3,9 @@ Fast cross platform ffmpeg based utility for generating movie files for video pr
 
 Dailies utility can generate movie with cutomizable slate image on zero frame and frame burnins. Movie format can be specified via video pressets listed in `config.yml`. Optional LUT file can be applied to generated mov.
 
-Instalation:
+![alt img](https://cloud.githubusercontent.com/assets/8003487/19505723/19279532-957a-11e6-8954-2337e5060393.png)
+
+#### Instalation
 ```
 # Clone this repo
 git clone https://github.com/Kif11/kk-dailies dailies
@@ -20,7 +22,7 @@ To run test
 ```
 Check `./tests/tmp` folder for generated movie
 
-Usage:
+#### Usage
 ```
 values = {
     'company_name': 'CompanyName',
@@ -41,5 +43,5 @@ values = {
 slate = Dailies()
 slate.fields_from_dict(values)
 
-slate.make_mov('/path/sh0000_test_v003_%04d.jpg', 'out_video_pjpeg.mov', preset='pjpeg', lut='some_lut.cube')
+slate.make_mov('/path/sh0000_test_v003_%04d.jpg', 'out_video_pjpeg.mov')
 ```
