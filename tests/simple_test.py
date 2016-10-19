@@ -3,10 +3,12 @@ import os
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 test_seq = os.path.join(script_dir, 'jpg_seq', 'sh0000_test_v003_%04d.jpg')
+lut_file = os.path.join(script_dir, 'bdn_all_log2vid_3D_16_v004.cube')
 tmp_dir = os.path.join(script_dir, 'tmp')
 if not os.path.exists(tmp_dir):
     os.mkdir(tmp_dir)
 out_mov_pjpeg = os.path.join(tmp_dir, 'out_video_pjpeg.mov')
+out_mov_pjpeg_lut = os.path.join(tmp_dir, 'out_video_pjpeg_lut.mov')
 out_mov_dnxhd = os.path.join(tmp_dir, 'out_video_dnxhd.mov')
 
 
@@ -29,5 +31,6 @@ values = {
 slate = Dailies()
 slate.fields_from_dict(values)
 
+slate.make_mov(test_seq, out_mov_pjpeg_lut, preset='pjpeg', lut=lut_file)
 slate.make_mov(test_seq, out_mov_pjpeg, preset='pjpeg')
-# slate.make_mov(test_seq, out_mov_dnxhd, preset='dnxhd')
+slate.make_mov(test_seq, out_mov_dnxhd, preset='dnxhd')

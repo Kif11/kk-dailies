@@ -49,8 +49,8 @@ class Dailies(object):
         self.color_bars = os.path.join(self.res, self.config['color_bar'])
         self.logo = os.path.join(self.res, self.config['company_logo'])
         # This paths used inside ffmpeg complex filter thus need special treatment
-        self.logo_font_file = self._prep_for_filter(os.path.join(self.res, self.config['company_font']))
-        self.font_file = self._prep_for_filter(os.path.join(self.res, self.config['body_font']))
+        self.logo_font_file = os.path.join(self.res, self.config['company_font'])
+        self.font_file = os.path.join(self.res, self.config['body_font'])
 
         # Global slate alignment properties
         self.left_text_margin = '(w)/2+150'
@@ -224,13 +224,14 @@ class Dailies(object):
 
         return stream
 
-    def make_slate(self, src_seq):
+    def make_slate(self, src_seq, lut=''):
         """
         Generate an image slate out of given image sequence
         Slate information get set from self.fields_data member variable
 
         :param src_seq: (str) Path to source image sequence
                         in the following format /path/name_%04d.ext
+        :param lut: (str) Path to optional cube LUT file
 
         :returns: (str) Path to generated slate image
         """
@@ -257,8 +258,15 @@ class Dailies(object):
         text = "drawtext=fontsize={font_size}:fontcolor={font_color}:fontfile={font_file}:text".format(
             font_size=self.font_size,
             font_color=self.font_color,
-            font_file=self.font_file
+            font_file=self._prep_for_filter(self.font_file)
         )
+
+        if lut:
+            lut_filter = (
+                "[thumbnail] lut3d={lut_path} [thumbnail];"
+            ).format(lut_path=self._prep_for_filter(lut))
+        else:
+            lut_filter = ''
 
         # ffmpeg complex filter to generate a slate. For more information see
         # section four (Filtergraph description) of the following docs
@@ -268,7 +276,7 @@ class Dailies(object):
             "[0:v] scale={new_x}:{new_y} [thumbnail]; "
             "[thumbnail][3:v] overlay [thumbnail]; "
             "[thumbnail][3:v] overlay=x=(main_w-overlay_w):y=(main_h-overlay_h) [thumbnail]; "
-            "[thumbnail] scale=(iw/4):(ih/4) [thumbnail]; "
+            "[thumbnail] scale=(iw/4):(ih/4) [thumbnail]; {lut_filter}"
             "[base][thumbnail] overlay=((main_w-overlay_w)/2)-500:(main_h-overlay_h)/2 [base]; "
             "[2:v] scale=-1:-1 [self.bars]; "
             "[base][self.bars] overlay=x=(main_w-overlay_w):y=(main_h-overlay_h-50) [base]; "
@@ -302,11 +310,11 @@ class Dailies(object):
         ).format(
             #
             # Global formatting and render values
-            font_color=self.font_color, logo_font_file=self.logo_font_file,
-            font_file=self.font_file, line_spacing=self.line_spacing,
+            font_color=self.font_color, logo_font_file=self._prep_for_filter(self.logo_font_file),
+            font_file=self._prep_for_filter(self.font_file), line_spacing=self.line_spacing,
             left_text_margin=self.left_text_margin,
             top_text_margin=self.top_text_margin, new_x=self.new_x,
-            new_y=self.new_y, text=text, p=p, pv=pv,
+            new_y=self.new_y, text=text, p=p, pv=pv, lut_filter=lut_filter,
             #
             # User defined fields slate values
             project_name=self.fields_data['project_name'],
@@ -343,7 +351,7 @@ class Dailies(object):
 
         return output
 
-    def make_mov(self, src_seq, out_mov, preset='', burnin=True, slate=True):
+    def make_mov(self, src_seq, out_mov, preset='', burnin=True, slate=True, lut=''):
         """
         Generate movie out of image sequence with and optional slate and burnins
 
@@ -354,6 +362,7 @@ class Dailies(object):
                        number on every frame of the video
         :param slate: (bool) Generate slate image and append it as the first
                       frame of the final video
+        :param lut: (str) Path to optional cube LUT file
 
         :returns: (str) Path to generated movie file
         """
@@ -379,6 +388,14 @@ class Dailies(object):
             "[1:v] scale={new_x}:{new_y}, setsar=1:1 [base]; "
             "[base] null "
         ).format(new_x=self.new_x, new_y=self.new_y)
+
+        if lut:
+            # Apply cube LUT to the video
+            lut_filter = (
+                "[base]; [base] lut3d={lut_path}"
+            ).format(lut_path=self._prep_for_filter(lut))
+
+            filters += lut_filter
 
         if slate:
             # Concatenate our slate and the rest of the video
@@ -412,7 +429,7 @@ class Dailies(object):
                   "x=(w-(text_w+10)):y=(h-(text_h+10)): "
                   "enable='between(n,1,99999)'"
             ).format(
-                font_color=self.font_color, font_file=self.font_file,
+                font_color=self.font_color, font_file=self._prep_for_filter(self.font_file),
                 file_name=file_name, start=seq.start(), end=seq.end()
             )
             filters += burnin_filter
@@ -426,7 +443,7 @@ class Dailies(object):
 
         if slate:
             # Generate slate image
-            slate = self.make_slate(src_seq)
+            slate = self.make_slate(src_seq, lut=lut)
 
             # Append slate stream as stream 0 to the final command
             cmd += ['-i', slate]
