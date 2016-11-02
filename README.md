@@ -17,7 +17,7 @@ sudo chmod +x run
 # Install dependencies
 ./run setup
 
-To run test
+# Run test
 ./run test
 ```
 Check `./tests/tmp` folder for generated movie
