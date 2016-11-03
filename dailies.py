@@ -6,13 +6,20 @@ import json
 import glob
 import subprocess as sp
 from fileseq import FileSequence
-import logging as log
+import logging
+
+log = logging.getLogger(__name__)
+
+
+def set_logger(logger):
+    global log
+    log = logger
 
 debug = os.environ.get('DAILIES_DEBUG')
 if debug:
-    log.root.setLevel('DEBUG')
+    log.setLevel(logging.DEBUG)
 else:
-    log.root.setLevel('INFO')
+    log.setLevel(logging.INFO)
 
 
 class Dailies(object):
@@ -51,6 +58,7 @@ class Dailies(object):
         # This paths used inside ffmpeg complex filter thus need special treatment
         self.logo_font_file = os.path.join(self.res, self.config['company_font'])
         self.font_file = os.path.join(self.res, self.config['body_font'])
+        self.default_lut = os.path.join(self.res, self.config['default_lut'])
 
         # Global slate alignment properties
         self.left_text_margin = '(w)/2+150'
@@ -338,11 +346,11 @@ class Dailies(object):
             '-i', self.logo, '-vframes', '1', '-filter_complex', filters, str(output)
         ]
 
-        if debug:
-            cmd.pop(1)
-            cmd.pop(1)
+        if debug >= '2':
             log.debug('SLATE_COMMAND: %s' % cmd)
-
+        if debug >= '3':
+            cmd.pop(1)
+            cmd.pop(1)
 
         exit_status = sp.call(cmd)
 
@@ -388,6 +396,10 @@ class Dailies(object):
             "[1:v] scale={new_x}:{new_y}, setsar=1:1 [base]; "
             "[base] null "
         ).format(new_x=self.new_x, new_y=self.new_y)
+
+        if lut == 'default':
+            # Use default LUT specified in config.yml
+            lut = self.default_lut
 
         if lut:
             # Apply cube LUT to the video
@@ -455,13 +467,78 @@ class Dailies(object):
         cmd += video_settings
         cmd += ['-filter_complex', filters, out_mov]
 
-        if debug:
+        if debug >= '2':
+            log.debug('MOV_COMMAND: %s' % cmd)
+        if debug >= '3':
             # Remove silent flags from the final command
             cmd.pop(1)
             cmd.pop(1)
-            log.debug('MOV_COMMAND: %s' % cmd)
 
-        exit_status = sp.call(cmd)
+        from subprocess import PIPE, Popen
+        from threading import Thread
+
+        def enqueue_output(out, queue):
+            for line in iter(out.readline, b''):
+                queue.put(line)
+            out.close()
+
+        ON_POSIX = 'posix' in sys.builtin_module_names
+
+        process = Popen(cmd, stdout=PIPE)
+        import pdb; pdb.set_trace()
+
+
+        q = Queue()  # Queue to hold logging output from external process
+        t = Thread(target=enqueue_output, args=(p.stdout, q))
+        t.daemon = True  # Thread dies with the program
+        t.start()
+
+
+        current_frame = 0
+        # Read line without blocking
+        while t.is_alive():
+            try:
+                print 'LINE: ', line
+                # Timeout is required
+                # We need to allow for some time for subprocess to finish correctly
+                # in order to avoid this exception
+                # Exception in thread Thread-1 (most likely raised during interpreter shutdown)
+                # See http://bugs.python.org/issue14623 for more info
+                line = q.get(timeout=.1)
+            except Empty:
+                pass
+            else:  # got line
+                new_line = line.rstrip()
+
+                # Skip empty
+                if not new_line:
+                    continue
+
+                # Skip strings as '.4', '.9' etc
+                if re.match(r'\.[0-9]+', new_line):
+                    continue
+
+                if new_line.startswith('Writing'):
+
+                    log.info(
+                        'Rendering frame %s out of %s'
+                        % (current_frame, total_frames)
+                    )
+
+                    current_frame += 1
+                    continue
+
+                log.info(line.rstrip())
+
+        # At this point the subprocess should be terminated
+        # We use wait to get its exit code.
+        # 0 - success
+        # 1 - Error (no further detail, but typically happens with
+        # invalid/inconsistent parameters passed into Nuke
+        # 100 - license error
+        exit_status = p.wait()
+
+        import pdb; pdb.set_trace()
 
         msg = 'Error occurred during mov generation.'
         self._check_exit_status(exit_status, msg)

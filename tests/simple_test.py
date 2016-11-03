@@ -32,5 +32,5 @@ slate = Dailies()
 slate.fields_from_dict(values)
 
 slate.make_mov(test_seq, out_mov_pjpeg_lut, preset='pjpeg', lut=lut_file)
-slate.make_mov(test_seq, out_mov_pjpeg, preset='pjpeg')
-slate.make_mov(test_seq, out_mov_dnxhd, preset='dnxhd')
+# slate.make_mov(test_seq, out_mov_pjpeg, preset='pjpeg')
+# slate.make_mov(test_seq, out_mov_dnxhd, preset='dnxhd')

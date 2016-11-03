@@ -96,3 +96,10 @@ modules/
 
 # Test output
 tests/tmp
+
+# Studio local assets
+resources/local
+
+# Mac files
+.DS_Store
+._.DS_Store

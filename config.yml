@@ -1,6 +1,7 @@
 # Configuratin for the slate
 
-company_logo: logo.png
+company_logo: local/eep_logo.png
+default_lut: local/bdn_all_log2vid_3D_16_v004.cube
 company_font: lunatix.otf
 body_font: liberationsans_regular.ttf
 bars: bars.png
