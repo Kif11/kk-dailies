@@ -38,14 +38,31 @@ class Dailies(object):
         with open(config_file, 'r') as f:
             self.config = yaml.load(f)
 
-        self._ffmpeg = os.path.join(script_dir, 'bin', 'ffmpeg')
-        self._ffprobe = os.path.join(script_dir, 'bin', 'ffprobe')
+        # Determine ffmpeg and ffprobe paths
+        ffmpeg_dir = os.environ.get('FFMPEG_DIR')
 
-        # Use global ffmpeg if it was not installed in this module
-        if not os.path.exists(self._ffmpeg):
-            self._ffmpeg = 'ffmpeg'
-        if not os.path.exists(self._ffprobe):
-            self._ffprobe = 'ffprobe'
+        if os.environ.get('FFMPEG_DIR') is not None:
+            # From the environmental variable
+            ffmpeg_dir = os.environ.get('FFMPEG_DIR')
+        elif config['ffmpeg_dir'][platform] is not None:
+            # From configuration file
+            ffmpeg_dir = self.config['ffmpeg_dir'][platform]
+        else:
+            exit_code = os.system('ffmpeg -version')
+            if exit_code == 0:
+                log.debug('Using system global ffmpeg')
+            else:
+                log.warning(
+                    'Can not determine ffmpeg path. Make sure that ffmpeg '
+                    'installed and in your PATH. You can also set FFMPEG_DIR '
+                    'environmental variable or specify path in the config.yml'
+                )
+            ffmpeg_dir = ''
+
+        self._ffmpeg = os.path.join(ffmpeg_dir, 'ffmpeg')
+        self._ffprobe = os.path.join(ffmpeg_dir, 'ffprobe')
+
+        log.debug('FFMPEG path: %s' % self._ffmpeg)
 
         # NOTE(Kirill): Probably should move all of this slate related variables
         # to the make_slate function
@@ -176,7 +193,7 @@ class Dailies(object):
             log.error(err_msg)
             log.info(
                 'Please set DAILIES_DEBUG environmental variable '
-                'to 1 to see debug info'
+                'to 3 to see debug info'
             )
             raise Exception(err_msg)
 
@@ -474,71 +491,7 @@ class Dailies(object):
             cmd.pop(1)
             cmd.pop(1)
 
-        from subprocess import PIPE, Popen
-        from threading import Thread
-
-        def enqueue_output(out, queue):
-            for line in iter(out.readline, b''):
-                queue.put(line)
-            out.close()
-
-        ON_POSIX = 'posix' in sys.builtin_module_names
-
-        process = Popen(cmd, stdout=PIPE)
-        import pdb; pdb.set_trace()
-
-
-        q = Queue()  # Queue to hold logging output from external process
-        t = Thread(target=enqueue_output, args=(p.stdout, q))
-        t.daemon = True  # Thread dies with the program
-        t.start()
-
-
-        current_frame = 0
-        # Read line without blocking
-        while t.is_alive():
-            try:
-                print 'LINE: ', line
-                # Timeout is required
-                # We need to allow for some time for subprocess to finish correctly
-                # in order to avoid this exception
-                # Exception in thread Thread-1 (most likely raised during interpreter shutdown)
-                # See http://bugs.python.org/issue14623 for more info
-                line = q.get(timeout=.1)
-            except Empty:
-                pass
-            else:  # got line
-                new_line = line.rstrip()
-
-                # Skip empty
-                if not new_line:
-                    continue
-
-                # Skip strings as '.4', '.9' etc
-                if re.match(r'\.[0-9]+', new_line):
-                    continue
-
-                if new_line.startswith('Writing'):
-
-                    log.info(
-                        'Rendering frame %s out of %s'
-                        % (current_frame, total_frames)
-                    )
-
-                    current_frame += 1
-                    continue
-
-                log.info(line.rstrip())
-
-        # At this point the subprocess should be terminated
-        # We use wait to get its exit code.
-        # 0 - success
-        # 1 - Error (no further detail, but typically happens with
-        # invalid/inconsistent parameters passed into Nuke
-        # 100 - license error
-        exit_status = p.wait()
-
-        import pdb; pdb.set_trace()
+        exit_status = sp.call(cmd)
 
         msg = 'Error occurred during mov generation.'
         self._check_exit_status(exit_status, msg)

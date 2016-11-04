@@ -7,6 +7,11 @@ body_font: liberationsans_regular.ttf
 bars: bars.png
 color_bar: cbar.png
 
+ffmpeg_dir:
+  mac: /EEP/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/darwin
+  win: //gin.eep.com/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/win32
+  linux: /EEP/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/linux2
+
 video_pressets:
   pjpeg: -r 24 -crf 18 -vcodec mjpeg -s 1920x1080 -pix_fmt yuvj444p -qmin 1 -qmax 1
   dnxhd: -r 24 -vcodec dnxhd -s 1920x1080 -b:v 36M -minrate 36M -maxrate 36M
