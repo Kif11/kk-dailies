@@ -1,16 +1,16 @@
 # Configuratin for the slate
 
-company_logo: local/eep_logo.png
-default_lut: local/bdn_all_log2vid_3D_16_v004.cube
-company_font: lunatix.otf
-body_font: liberationsans_regular.ttf
-bars: bars.png
-color_bar: cbar.png
+company_logo: '{TANK_CURRENT_PC}/studio/img/eep_logo.png'
+default_lut: '{TANK_CURRENT_PC}/studio/lut/default.cube'
+company_font: '{RESOURCES}/lunatix.otf'
+body_font: '{RESOURCES}/liberationsans_regular.ttf'
+bars: '{RESOURCES}/bars.png'
+color_bar: '{RESOURCES}/cbar.png'
 
 ffmpeg_dir:
-  mac: /EEP/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/darwin
-  win: //gin.eep.com/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/win32
-  linux: /EEP/Tools/Settings/shotgun/bolden_kkdev/install/core/resources/ffmpeg/linux2
+  mac: '{TANK_CURRENT_PC}/install/core/resources/ffmpeg/darwin'
+  win: '{TANK_CURRENT_PC}/install/core/resources/ffmpeg/win32'
+  linux: '{TANK_CURRENT_PC}/install/core/resources/ffmpeg/linux2'
 
 video_pressets:
   pjpeg: -r 24 -crf 18 -vcodec mjpeg -s 1920x1080 -pix_fmt yuvj444p -qmin 1 -qmax 1
